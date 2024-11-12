@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'dart:html' as html;
 
 class CategoriesBody extends StatefulWidget {
   const CategoriesBody({super.key});
@@ -8,7 +12,7 @@ class CategoriesBody extends StatefulWidget {
 }
 
 class _CategoriesBodyState extends State<CategoriesBody> {
-  final List<Map<String, dynamic>> _categories = List.generate(10, (index) {
+  final List<Map<String, dynamic>> _categories = List.generate(20, (index) {
     return {
       'number': index + 1,
       'category': 'Category $index',
@@ -28,6 +32,123 @@ class _CategoriesBodyState extends State<CategoriesBody> {
             .toLowerCase()
             .contains(_filter.toLowerCase()))
         .toList();
+  }
+
+  void _generatePdfReport() async {
+    final pdf = pw.Document();
+
+    final ByteData bytes =
+        await rootBundle.load('assets/images/point-of-sale.png');
+    final Uint8List logo = bytes.buffer.asUint8List();
+
+    final ByteData regularFontData =
+        await rootBundle.load("assets/fonts/Roboto/Roboto-Regular.ttf");
+    final ByteData boldFontData =
+        await rootBundle.load("assets/fonts/Roboto/Roboto-Bold.ttf");
+
+    final pw.Font regularFont = pw.Font.ttf(regularFontData);
+    final pw.Font boldFont = pw.Font.ttf(boldFontData);
+
+    const int maxRowsPerPage = 10;
+
+    String formattedDate =
+        DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now());
+
+    print("Filtered Categories: $_filteredCategories");
+
+    for (int i = 0; i < _filteredCategories.length; i += maxRowsPerPage) {
+      final chunk = _filteredCategories.sublist(
+          i,
+          (i + maxRowsPerPage < _filteredCategories.length)
+              ? i + maxRowsPerPage
+              : _filteredCategories.length);
+
+      pdf.addPage(
+        pw.Page(
+          build: (pw.Context context) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Image(pw.MemoryImage(logo), width: 100, height: 100),
+                pw.SizedBox(height: 20),
+                pw.Text('Categories Report',
+                    style: pw.TextStyle(fontSize: 24, font: boldFont)),
+                pw.SizedBox(height: 20),
+                pw.Text('Generated on: $formattedDate',
+                    style: pw.TextStyle(fontSize: 12, font: regularFont)),
+                pw.SizedBox(height: 20),
+                pw.Text('User: Admin',
+                    style: pw.TextStyle(fontSize: 18, font: regularFont)),
+                pw.SizedBox(height: 20),
+                pw.Text('Total Categories: ${_filteredCategories.length}',
+                    style: pw.TextStyle(fontSize: 18, font: regularFont)),
+                pw.SizedBox(height: 20),
+                pw.Table(
+                  border: pw.TableBorder.all(),
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Category Name',
+                              style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  font: boldFont)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Description',
+                              style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  font: boldFont)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Status',
+                              style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  font: boldFont)),
+                        ),
+                      ],
+                    ),
+                    ...chunk.map((category) {
+                      return pw.TableRow(
+                        children: [
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(8.0),
+                            child: pw.Text(category['category'],
+                                style: pw.TextStyle(font: regularFont)),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(8.0),
+                            child: pw.Text(category['description'],
+                                style: pw.TextStyle(font: regularFont)),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(8.0),
+                            child: pw.Text(category['status'],
+                                style: pw.TextStyle(font: regularFont)),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    }
+
+    final Uint8List pdfData = await pdf.save();
+
+    final blob = html.Blob([pdfData], 'application/pdf');
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final anchor = html.AnchorElement(href: url)
+      ..setAttribute('download', 'categories_report.pdf')
+      ..click();
+    html.Url.revokeObjectUrl(url);
   }
 
   void _showAddCategoryDialog() {
@@ -172,9 +293,7 @@ class _CategoriesBodyState extends State<CategoriesBody> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: () {
-                    // Export PDF functionality
-                  },
+                  onPressed: _generatePdfReport,
                   child: const Text('PDF Report'),
                 ),
                 const SizedBox(width: 8),
