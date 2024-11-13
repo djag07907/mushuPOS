@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart';
 import 'dart:html' as html;
 
 class ProvidersBody extends StatefulWidget {
@@ -16,7 +17,11 @@ class _ProvidersBodyState extends State<ProvidersBody> {
     return {
       'number': index + 1,
       'provider': 'Provider name $index',
-      'ID': 'ID $index',
+      'documentType': 'Document Type $index',
+      'documentNumber': 'Document Number $index',
+      'phoneNumber': 'Phone Number $index',
+      'email': 'Email $index',
+      'address': 'Address $index',
       'status': index % 2 == 0 ? 'Active' : 'Inactive',
     };
   });
@@ -36,24 +41,18 @@ class _ProvidersBodyState extends State<ProvidersBody> {
 
   void _generatePdfReport() async {
     final pdf = pw.Document();
-
     final ByteData bytes =
         await rootBundle.load('assets/images/point-of-sale.png');
     final Uint8List logo = bytes.buffer.asUint8List();
-
     final ByteData regularFontData =
         await rootBundle.load("assets/fonts/Roboto/Roboto-Regular.ttf");
     final ByteData boldFontData =
         await rootBundle.load("assets/fonts/Roboto/Roboto-Bold.ttf");
-
     final pw.Font regularFont = pw.Font.ttf(regularFontData);
     final pw.Font boldFont = pw.Font.ttf(boldFontData);
-
-    const int maxRowsPerPage = 10;
-
+    const int maxRowsPerPage = 5;
     String formattedDate =
         DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now());
-
     print("Filtered Providers: $_filteredProviders");
 
     for (int i = 0; i < _filteredProviders.length; i += maxRowsPerPage) {
@@ -62,9 +61,9 @@ class _ProvidersBodyState extends State<ProvidersBody> {
           (i + maxRowsPerPage < _filteredProviders.length)
               ? i + maxRowsPerPage
               : _filteredProviders.length);
-
       pdf.addPage(
         pw.Page(
+          pageFormat: PdfPageFormat.a4.landscape,
           build: (pw.Context context) {
             return pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -85,29 +84,75 @@ class _ProvidersBodyState extends State<ProvidersBody> {
                 pw.SizedBox(height: 20),
                 pw.Table(
                   border: pw.TableBorder.all(),
+                  columnWidths: const {
+                    0: pw.FixedColumnWidth(50.0),
+                    1: pw.FixedColumnWidth(100.0),
+                    2: pw.FixedColumnWidth(100.0),
+                    3: pw.FixedColumnWidth(100.0),
+                    4: pw.FixedColumnWidth(100.0),
+                    5: pw.FixedColumnWidth(100.0),
+                    6: pw.FixedColumnWidth(100.0),
+                    7: pw.FixedColumnWidth(50.0),
+                    8: pw.FixedColumnWidth(50.0),
+                  },
                   children: [
                     pw.TableRow(
                       children: [
                         pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
+                          padding: const pw.EdgeInsets.all(4.0),
                           child: pw.Text('Provider Name',
                               style: pw.TextStyle(
                                   fontWeight: pw.FontWeight.bold,
-                                  font: boldFont)),
+                                  font: boldFont,
+                                  fontSize: 10)),
                         ),
                         pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
-                          child: pw.Text('ID',
+                          padding: const pw.EdgeInsets.all(4.0),
+                          child: pw.Text('Document Type',
                               style: pw.TextStyle(
                                   fontWeight: pw.FontWeight.bold,
-                                  font: boldFont)),
+                                  font: boldFont,
+                                  fontSize: 10)),
                         ),
                         pw.Padding(
-                          padding: const pw.EdgeInsets.all(8.0),
+                          padding: const pw.EdgeInsets.all(4.0),
+                          child: pw.Text('Document Number',
+                              style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  font: boldFont,
+                                  fontSize: 10)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4.0),
+                          child: pw.Text('Phone Number',
+                              style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  font: boldFont,
+                                  fontSize: 10)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4.0),
+                          child: pw.Text('Email',
+                              style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  font: boldFont,
+                                  fontSize: 10)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4.0),
+                          child: pw.Text('Address',
+                              style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  font: boldFont,
+                                  fontSize: 10)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4.0),
                           child: pw.Text('Status',
                               style: pw.TextStyle(
                                   fontWeight: pw.FontWeight.bold,
-                                  font: boldFont)),
+                                  font: boldFont,
+                                  fontSize: 10)),
                         ),
                       ],
                     ),
@@ -115,19 +160,46 @@ class _ProvidersBodyState extends State<ProvidersBody> {
                       return pw.TableRow(
                         children: [
                           pw.Padding(
-                            padding: const pw.EdgeInsets.all(8.0),
-                            child: pw.Text(provider['provider'],
-                                style: pw.TextStyle(font: regularFont)),
+                            padding: const pw.EdgeInsets.all(4.0),
+                            child: pw.Text(provider['provider'] ?? 'N/A',
+                                style: pw.TextStyle(
+                                    font: regularFont, fontSize: 9)),
                           ),
                           pw.Padding(
-                            padding: const pw.EdgeInsets.all(8.0),
-                            child: pw.Text(provider['ID'],
-                                style: pw.TextStyle(font: regularFont)),
+                            padding: const pw.EdgeInsets.all(4.0),
+                            child: pw.Text(provider['documentType'] ?? 'N/A',
+                                style: pw.TextStyle(
+                                    font: regularFont, fontSize: 9)),
                           ),
                           pw.Padding(
-                            padding: const pw.EdgeInsets.all(8.0),
-                            child: pw.Text(provider['status'],
-                                style: pw.TextStyle(font: regularFont)),
+                            padding: const pw.EdgeInsets.all(4.0),
+                            child: pw.Text(provider['documentNumber'] ?? 'N/A',
+                                style: pw.TextStyle(
+                                    font: regularFont, fontSize: 9)),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(4.0),
+                            child: pw.Text(provider['phoneNumber'] ?? 'N/A',
+                                style: pw.TextStyle(
+                                    font: regularFont, fontSize: 9)),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(4.0),
+                            child: pw.Text(provider['email'] ?? 'N/A',
+                                style: pw.TextStyle(
+                                    font: regularFont, fontSize: 9)),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(4.0),
+                            child: pw.Text(provider['address'] ?? 'N/A',
+                                style: pw.TextStyle(
+                                    font: regularFont, fontSize: 9)),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(4.0),
+                            child: pw.Text(provider['status'] ?? 'N/A',
+                                style: pw.TextStyle(
+                                    font: regularFont, fontSize: 9)),
                           ),
                         ],
                       );
@@ -142,7 +214,6 @@ class _ProvidersBodyState extends State<ProvidersBody> {
     }
 
     final Uint8List pdfData = await pdf.save();
-
     final blob = html.Blob([pdfData], 'application/pdf');
     final url = html.Url.createObjectUrlFromBlob(blob);
     final anchor = html.AnchorElement(href: url)
@@ -331,7 +402,11 @@ class _ProvidersBodyState extends State<ProvidersBody> {
                   columns: const [
                     DataColumn(label: Text('#')),
                     DataColumn(label: Text('Provider')),
-                    DataColumn(label: Text('ID')),
+                    DataColumn(label: Text('Document Type')),
+                    DataColumn(label: Text('Document Number')),
+                    DataColumn(label: Text('Phone Number')),
+                    DataColumn(label: Text('Email')),
+                    DataColumn(label: Text('Address')),
                     DataColumn(label: Text('Status')),
                     DataColumn(label: Text('Edit')),
                     DataColumn(label: Text('Change Status')),
@@ -377,8 +452,15 @@ class _ProvidersDataSource extends DataTableSource {
       index: index,
       cells: [
         DataCell(Text(provider['number'].toString())),
-        DataCell(Text(provider['provider'])),
-        DataCell(Text(provider['ID'])),
+        DataCell(Text(provider['provider'] ?? 'N/A')), // Handle potential null
+        DataCell(
+            Text(provider['documentType'] ?? 'N/A')), // Handle potential null
+        DataCell(
+            Text(provider['documentNumber'] ?? 'N/A')), // Handle potential null
+        DataCell(
+            Text(provider['phoneNumber'] ?? 'N/A')), // Handle potential null
+        DataCell(Text(provider['email'] ?? 'N/A')), // Handle potential null
+        DataCell(Text(provider['address'] ?? 'N/A')), // Handle potential null
         DataCell(
           Text(
             provider['status'],
