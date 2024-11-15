@@ -1,3 +1,4 @@
+import 'package:barcode_widget/barcode_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -16,14 +17,21 @@ class _ProductsBodyState extends State<ProductsBody> {
     return {
       'number': index + 1,
       'product': 'Product name $index',
-      'ID': 'ID $index',
+      'productCode': 'Code $index',
       'status': index % 2 == 0 ? 'Active' : 'Inactive',
+      'category': 'Category $index',
+      'brand': 'Brand $index',
+      'sellPrice': 10.0 + index,
+      'isvType': 'Type $index',
+      'stock': 100,
+      'productImage': null,
     };
   });
 
   String _filter = '';
   int _rowsPerPage = 5;
   int _currentPage = 0;
+  TextEditingController _productCodeController = TextEditingController();
 
   List<Map<String, dynamic>> get _filteredProducts {
     return _products
@@ -153,7 +161,13 @@ class _ProductsBodyState extends State<ProductsBody> {
 
   void _showAddProductDialog() {
     String productName = '';
-    String productID = '';
+    String category = 'Category 1';
+    String brand = 'Brand 1';
+    String isvType = 'Type 1';
+    double sellPrice = 0.0;
+    int stock = 0;
+    String? productImage;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -170,23 +184,92 @@ class _ProductsBodyState extends State<ProductsBody> {
               ),
               const SizedBox(height: 8),
               TextField(
-                decoration: const InputDecoration(labelText: 'ID'),
-                onChanged: (value) {
-                  productID = value;
+                controller: _productCodeController,
+                decoration: const InputDecoration(labelText: 'Product Code'),
+              ),
+              const SizedBox(height: 8),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _productCodeController,
+                builder: (context, value, child) {
+                  return Container(
+                    height: 100,
+                    child: BarcodeWidget(
+                      data: value.text.isNotEmpty ? value.text : ' ',
+                      width: 100,
+                      height: 100,
+                      barcode: Barcode.code128(),
+                    ),
+                  );
                 },
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Category'),
+                value: category,
+                items: const [
+                  DropdownMenuItem(
+                      value: 'Category 1', child: Text('Category 1')),
+                  DropdownMenuItem(
+                      value: 'Category 2', child: Text('Category 2')),
+                ],
+                onChanged: (value) {
+                  category = value!;
+                },
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Brand'),
+                value: brand,
+                items: const [
+                  DropdownMenuItem(value: 'Brand 1', child: Text('Brand 1')),
+                  DropdownMenuItem(value: 'Brand 2', child: Text('Brand 2')),
+                ],
+                onChanged: (value) {
+                  brand = value!;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Sell Price'),
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  sellPrice = double.tryParse(value) ?? 0.0;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Stock'),
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  stock = int.tryParse(value) ?? 0;
+                },
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: () async {
+                  // TODO: Image upload logic here
+                },
+                child: const Text('Upload Image'),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () {
-                if (productName.isNotEmpty && productID.isNotEmpty) {
+                if (productName.isNotEmpty &&
+                    _productCodeController.text.isNotEmpty) {
                   setState(() {
                     _products.add({
                       'number': _products.length + 1,
                       'product': productName,
-                      'ID': productID,
+                      'productCode': _productCodeController.text,
                       'status': 'Active',
+                      'category': category,
+                      'brand': brand,
+                      'sellPrice': sellPrice,
+                      'isvType': isvType,
+                      'stock': stock,
+                      'productImage': productImage,
                     });
                   });
                   Navigator.of(context).pop();
@@ -208,14 +291,18 @@ class _ProductsBodyState extends State<ProductsBody> {
 
   void _showEditProductDialog(int index) {
     String productName = _products[index]['product'];
-    String productID = _products[index]['ID'];
+    String productCode = _products[index]['productCode'];
+    String category = _products[index]['category'];
+    String brand = _products[index]['brand'];
+    double sellPrice = _products[index]['sellPrice'];
+    int stock = _products[index]['stock'];
     String productStatus = _products[index]['status'];
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Edit Product'),
+          title: Text(index == null ? 'Register Product' : 'Edit Product'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -228,35 +315,115 @@ class _ProductsBodyState extends State<ProductsBody> {
               ),
               const SizedBox(height: 8),
               TextField(
-                decoration: const InputDecoration(labelText: 'ID'),
-                controller: TextEditingController(text: productID),
+                controller: _productCodeController,
+                decoration: const InputDecoration(labelText: 'Product Code'),
                 onChanged: (value) {
-                  productID = value;
+                  productCode = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _productCodeController,
+                builder: (context, value, child) {
+                  return Container(
+                    height: 100,
+                    child: BarcodeWidget(
+                      data: value.text.isNotEmpty ? value.text : ' ',
+                      width: 100,
+                      height: 100,
+                      barcode: Barcode.code128(),
+                    ),
+                  );
                 },
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: 'Status'),
-                value: productStatus,
+                decoration: const InputDecoration(labelText: 'Category'),
+                value: category,
                 items: const [
-                  DropdownMenuItem(value: 'Active', child: Text('Active')),
-                  DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
+                  DropdownMenuItem(
+                      value: 'Category 1', child: Text('Category 1')),
+                  DropdownMenuItem(
+                      value: 'Category 2', child: Text('Category 2')),
                 ],
                 onChanged: (value) {
-                  productStatus = value!;
+                  category = value!;
                 },
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Brand'),
+                value: brand,
+                items: const [
+                  DropdownMenuItem(value: 'Brand 1', child: Text('Brand 1')),
+                  DropdownMenuItem(value: 'Brand 2', child: Text('Brand 2')),
+                ],
+                onChanged: (value) {
+                  brand = value!;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Sell Price'),
+                keyboardType: TextInputType.number,
+                controller: TextEditingController(text: sellPrice.toString()),
+                onChanged: (value) {
+                  sellPrice = double.tryParse(value) ?? 0.0;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Stock'),
+                keyboardType: TextInputType.number,
+                controller: TextEditingController(text: stock.toString()),
+                onChanged: (value) {
+                  stock = int.tryParse(value) ?? 0;
+                },
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: () async {
+                  //TODO: Image upload logic here
+                },
+                child: const Text('Upload Image'),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () {
-                setState(() {
-                  _products[index]['product'] = productName;
-                  _products[index]['ID'] = productID;
-                  _products[index]['status'] = productStatus;
-                });
-                Navigator.of(context).pop();
+                if (productName.isNotEmpty && productCode.isNotEmpty) {
+                  setState(() {
+                    if (index == null) {
+                      _products.add({
+                        'number': _products.length + 1,
+                        'product': productName,
+                        'productCode': productCode,
+                        'status': productStatus,
+                        'category': category,
+                        'brand': brand,
+                        'sellPrice': sellPrice,
+                        'isvType': 'Type 1',
+                        'stock': stock,
+                        'productImage': null,
+                      });
+                    } else {
+                      _products[index] = {
+                        'number': index + 1,
+                        'product': productName,
+                        'productCode': productCode,
+                        'status': productStatus,
+                        'category': category,
+                        'brand': brand,
+                        'sellPrice': sellPrice,
+                        'isvType': 'Type 1',
+                        'stock': stock,
+                        'productImage': null,
+                      };
+                    }
+                  });
+                  Navigator.of(context).pop();
+                }
               },
               child: const Text('Save'),
             ),
@@ -331,7 +498,12 @@ class _ProductsBodyState extends State<ProductsBody> {
                   columns: const [
                     DataColumn(label: Text('#')),
                     DataColumn(label: Text('Product')),
-                    DataColumn(label: Text('ID')),
+                    DataColumn(label: Text('Product Code')),
+                    DataColumn(label: Text('Category')),
+                    DataColumn(label: Text('Brand')),
+                    DataColumn(label: Text('Sell Price')),
+                    DataColumn(label: Text('ISV Type')),
+                    DataColumn(label: Text('Stock')),
                     DataColumn(label: Text('Status')),
                     DataColumn(label: Text('Edit')),
                     DataColumn(label: Text('Change Status')),
@@ -378,7 +550,12 @@ class _ProductsDataSource extends DataTableSource {
       cells: [
         DataCell(Text(product['number'].toString())),
         DataCell(Text(product['product'])),
-        DataCell(Text(product['ID'])),
+        DataCell(Text(product['productCode'])),
+        DataCell(Text(product['category'])),
+        DataCell(Text(product['brand'])),
+        DataCell(Text(product['sellPrice'].toString())),
+        DataCell(Text(product['isvType'])),
+        DataCell(Text(product['stock'].toString())),
         DataCell(
           Text(
             product['status'],

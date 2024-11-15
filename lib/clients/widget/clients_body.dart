@@ -17,7 +17,7 @@ class _ClientsBodyState extends State<ClientsBody> {
     return {
       'number': index + 1,
       'client': 'Client name $index',
-      'documentType': 'Document Type $index',
+      'documentType': 'Type ${index % 3 + 1}',
       'documentNumber': 'Document Number $index',
       'phoneNumber': 'Phone Number $index',
       'email': 'Email $index',
@@ -224,7 +224,12 @@ class _ClientsBodyState extends State<ClientsBody> {
 
   void _showAddClientDialog() {
     String clientName = '';
-    String clientID = '';
+    String documentType = 'Type 1';
+    String documentNumber = '';
+    String phoneNumber = '';
+    String email = '';
+    String address = '';
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -240,10 +245,44 @@ class _ClientsBodyState extends State<ClientsBody> {
                 },
               ),
               const SizedBox(height: 8),
-              TextField(
-                decoration: const InputDecoration(labelText: 'ID'),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Document Type'),
+                value: documentType,
+                items: const [
+                  DropdownMenuItem(value: 'Type 1', child: Text('Type 1')),
+                  DropdownMenuItem(value: 'Type 2', child: Text('Type 2')),
+                  DropdownMenuItem(value: 'Type 3', child: Text('Type 3')),
+                ],
                 onChanged: (value) {
-                  clientID = value;
+                  documentType = value!;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Document Number'),
+                onChanged: (value) {
+                  documentNumber = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Phone Number'),
+                onChanged: (value) {
+                  phoneNumber = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Email'),
+                onChanged: (value) {
+                  email = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Address'),
+                onChanged: (value) {
+                  address = value;
                 },
               ),
             ],
@@ -251,12 +290,21 @@ class _ClientsBodyState extends State<ClientsBody> {
           actions: [
             TextButton(
               onPressed: () {
-                if (clientName.isNotEmpty && clientID.isNotEmpty) {
+                if (clientName.isNotEmpty &&
+                    documentType.isNotEmpty &&
+                    documentNumber.isNotEmpty &&
+                    phoneNumber.isNotEmpty &&
+                    email.isNotEmpty &&
+                    address.isNotEmpty) {
                   setState(() {
                     _clients.add({
                       'number': _clients.length + 1,
                       'client': clientName,
-                      'ID': clientID,
+                      'documentType': documentType,
+                      'documentNumber': documentNumber,
+                      'phoneNumber': phoneNumber,
+                      'email': email,
+                      'address': address,
                       'status': 'Active',
                     });
                   });
@@ -279,7 +327,11 @@ class _ClientsBodyState extends State<ClientsBody> {
 
   void _showEditClientDialog(int index) {
     String clientName = _clients[index]['client'];
-    String clientID = _clients[index]['ID'];
+    String documentType = _clients[index]['documentType'];
+    String documentNumber = _clients[index]['documentNumber'];
+    String phoneNumber = _clients[index]['phoneNumber'];
+    String email = _clients[index]['email'];
+    String address = _clients[index]['address'];
     String clientStatus = _clients[index]['status'];
 
     showDialog(
@@ -298,11 +350,48 @@ class _ClientsBodyState extends State<ClientsBody> {
                 },
               ),
               const SizedBox(height: 8),
-              TextField(
-                decoration: const InputDecoration(labelText: 'ID'),
-                controller: TextEditingController(text: clientID),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Document Type'),
+                value: documentType,
+                items: const [
+                  DropdownMenuItem(value: 'Type 1', child: Text('Type 1')),
+                  DropdownMenuItem(value: 'Type 2', child: Text('Type 2')),
+                  DropdownMenuItem(value: 'Type 3', child: Text('Type 3')),
+                ],
                 onChanged: (value) {
-                  clientID = value;
+                  documentType = value!;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Document Number'),
+                controller: TextEditingController(text: documentNumber),
+                onChanged: (value) {
+                  documentNumber = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Phone Number'),
+                controller: TextEditingController(text: phoneNumber),
+                onChanged: (value) {
+                  phoneNumber = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Email'),
+                controller: TextEditingController(text: email),
+                onChanged: (value) {
+                  email = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Address'),
+                controller: TextEditingController(text: address),
+                onChanged: (value) {
+                  address = value;
                 },
               ),
               const SizedBox(height: 8),
@@ -324,7 +413,11 @@ class _ClientsBodyState extends State<ClientsBody> {
               onPressed: () {
                 setState(() {
                   _clients[index]['client'] = clientName;
-                  _clients[index]['ID'] = clientID;
+                  _clients[index]['documentType'] = documentType;
+                  _clients[index]['documentNumber'] = documentNumber;
+                  _clients[index]['phoneNumber'] = phoneNumber;
+                  _clients[index]['email'] = email;
+                  _clients[index]['address'] = address;
                   _clients[index]['status'] = clientStatus;
                 });
                 Navigator.of(context).pop();
@@ -452,14 +545,12 @@ class _ClientsDataSource extends DataTableSource {
       index: index,
       cells: [
         DataCell(Text(client['number'].toString())),
-        DataCell(Text(client['client'] ?? 'N/A')), // Handle potential null
-        DataCell(
-            Text(client['documentType'] ?? 'N/A')), // Handle potential null
-        DataCell(
-            Text(client['documentNumber'] ?? 'N/A')), // Handle potential null
-        DataCell(Text(client['phoneNumber'] ?? 'N/A')), // Handle potential null
-        DataCell(Text(client['email'] ?? 'N/A')), // Handle potential null
-        DataCell(Text(client['address'] ?? 'N/A')), // Handle potential null
+        DataCell(Text(client['client'] ?? 'N/A')),
+        DataCell(Text(client['documentType'] ?? 'N/A')),
+        DataCell(Text(client['documentNumber'] ?? 'N/A')),
+        DataCell(Text(client['phoneNumber'] ?? 'N/A')),
+        DataCell(Text(client['email'] ?? 'N/A')),
+        DataCell(Text(client['address'] ?? 'N/A')),
         DataCell(
           Text(
             client['status'],

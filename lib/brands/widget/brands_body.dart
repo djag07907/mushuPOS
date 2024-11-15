@@ -16,6 +16,7 @@ class _BrandsBodyState extends State<BrandsBody> {
     return {
       'number': index + 1,
       'brand': 'Brand name $index',
+      'description': 'Description $index',
       'Code': 'Code $index',
       'status': index % 2 == 0 ? 'Active' : 'Inactive',
     };
@@ -97,6 +98,13 @@ class _BrandsBodyState extends State<BrandsBody> {
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(8.0),
+                          child: pw.Text('Description',
+                              style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  font: boldFont)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8.0),
                           child: pw.Text('Code',
                               style: pw.TextStyle(
                                   fontWeight: pw.FontWeight.bold,
@@ -117,6 +125,11 @@ class _BrandsBodyState extends State<BrandsBody> {
                           pw.Padding(
                             padding: const pw.EdgeInsets.all(8.0),
                             child: pw.Text(brand['brand'],
+                                style: pw.TextStyle(font: regularFont)),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(8.0),
+                            child: pw.Text(brand['description'],
                                 style: pw.TextStyle(font: regularFont)),
                           ),
                           pw.Padding(
@@ -153,6 +166,7 @@ class _BrandsBodyState extends State<BrandsBody> {
 
   void _showAddBrandDialog() {
     String brandName = '';
+    String brandDescription = '';
     String brandCode = '';
     showDialog(
       context: context,
@@ -170,6 +184,13 @@ class _BrandsBodyState extends State<BrandsBody> {
               ),
               const SizedBox(height: 8),
               TextField(
+                decoration: const InputDecoration(labelText: 'Description'),
+                onChanged: (value) {
+                  brandDescription = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
                 decoration: const InputDecoration(labelText: 'Code'),
                 onChanged: (value) {
                   brandCode = value;
@@ -180,11 +201,14 @@ class _BrandsBodyState extends State<BrandsBody> {
           actions: [
             TextButton(
               onPressed: () {
-                if (brandName.isNotEmpty && brandCode.isNotEmpty) {
+                if (brandName.isNotEmpty &&
+                    brandDescription.isNotEmpty &&
+                    brandCode.isNotEmpty) {
                   setState(() {
                     _brands.add({
                       'number': _brands.length + 1,
                       'brand': brandName,
+                      'description': brandDescription,
                       'Code': brandCode,
                       'status': 'Active',
                     });
@@ -208,6 +232,7 @@ class _BrandsBodyState extends State<BrandsBody> {
 
   void _showEditBrandDialog(int index) {
     String brandName = _brands[index]['brand'];
+    String brandDescription = _brands[index]['description'];
     String brandCode = _brands[index]['Code'];
     String brandStatus = _brands[index]['status'];
 
@@ -224,6 +249,14 @@ class _BrandsBodyState extends State<BrandsBody> {
                 controller: TextEditingController(text: brandName),
                 onChanged: (value) {
                   brandName = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Description'),
+                controller: TextEditingController(text: brandDescription),
+                onChanged: (value) {
+                  brandDescription = value;
                 },
               ),
               const SizedBox(height: 8),
@@ -253,6 +286,7 @@ class _BrandsBodyState extends State<BrandsBody> {
               onPressed: () {
                 setState(() {
                   _brands[index]['brand'] = brandName;
+                  _brands[index]['description'] = brandDescription;
                   _brands[index]['Code'] = brandCode;
                   _brands[index]['status'] = brandStatus;
                 });
@@ -330,6 +364,7 @@ class _BrandsBodyState extends State<BrandsBody> {
                   columns: const [
                     DataColumn(label: Text('#')),
                     DataColumn(label: Text('Brand')),
+                    DataColumn(label: Text('Description')),
                     DataColumn(label: Text('Code')),
                     DataColumn(label: Text('Status')),
                     DataColumn(label: Text('Edit')),
@@ -377,6 +412,7 @@ class _BrandsDataSource extends DataTableSource {
       cells: [
         DataCell(Text(brand['number'].toString())),
         DataCell(Text(brand['brand'])),
+        DataCell(Text(brand['description'])),
         DataCell(Text(brand['Code'])),
         DataCell(
           Text(
