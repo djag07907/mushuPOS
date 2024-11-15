@@ -45,11 +45,11 @@ class _HomeBodyState extends State<HomeBody> {
             child: Column(
               children: [
                 Container(
-                  color: Colors.white,
+                  color: Colors.transparent,
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Image.asset(
-                      'images/point-of-sale.png',
+                      'images/point-of-sale-w.png',
                       height: 80,
                     ),
                   ),

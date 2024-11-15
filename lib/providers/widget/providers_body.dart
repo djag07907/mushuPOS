@@ -17,7 +17,7 @@ class _ProvidersBodyState extends State<ProvidersBody> {
     return {
       'number': index + 1,
       'provider': 'Provider name $index',
-      'documentType': 'Document Type $index',
+      'documentType': index % 2 == 0 ? 'ID Card' : 'Passport',
       'documentNumber': 'Document Number $index',
       'phoneNumber': 'Phone Number $index',
       'email': 'Email $index',
@@ -224,7 +224,12 @@ class _ProvidersBodyState extends State<ProvidersBody> {
 
   void _showAddProviderDialog() {
     String providerName = '';
-    String providerID = '';
+    String documentType = 'ID Card';
+    String documentNumber = '';
+    String phoneNumber = '';
+    String email = '';
+    String address = '';
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -240,10 +245,45 @@ class _ProvidersBodyState extends State<ProvidersBody> {
                 },
               ),
               const SizedBox(height: 8),
-              TextField(
-                decoration: const InputDecoration(labelText: 'ID'),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Document Type'),
+                value: documentType,
+                items: const [
+                  DropdownMenuItem(value: 'ID Card', child: Text('ID Card')),
+                  DropdownMenuItem(value: 'Passport', child: Text('Passport')),
+                  DropdownMenuItem(
+                      value: 'Driver License', child: Text('Driver License')),
+                ],
                 onChanged: (value) {
-                  providerID = value;
+                  documentType = value!;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Document Number'),
+                onChanged: (value) {
+                  documentNumber = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Phone Number'),
+                onChanged: (value) {
+                  phoneNumber = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Email'),
+                onChanged: (value) {
+                  email = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Address'),
+                onChanged: (value) {
+                  address = value;
                 },
               ),
             ],
@@ -251,12 +291,16 @@ class _ProvidersBodyState extends State<ProvidersBody> {
           actions: [
             TextButton(
               onPressed: () {
-                if (providerName.isNotEmpty && providerID.isNotEmpty) {
+                if (providerName.isNotEmpty && documentNumber.isNotEmpty) {
                   setState(() {
                     _providers.add({
                       'number': _providers.length + 1,
                       'provider': providerName,
-                      'ID': providerID,
+                      'documentType': documentType,
+                      'documentNumber': documentNumber,
+                      'phoneNumber': phoneNumber,
+                      'email': email,
+                      'address': address,
                       'status': 'Active',
                     });
                   });
@@ -279,7 +323,11 @@ class _ProvidersBodyState extends State<ProvidersBody> {
 
   void _showEditProviderDialog(int index) {
     String providerName = _providers[index]['provider'];
-    String providerID = _providers[index]['ID'];
+    String documentType = _providers[index]['documentType'];
+    String documentNumber = _providers[index]['documentNumber'];
+    String phoneNumber = _providers[index]['phoneNumber'];
+    String email = _providers[index]['email'];
+    String address = _providers[index]['address'];
     String providerStatus = _providers[index]['status'];
 
     showDialog(
@@ -298,23 +346,49 @@ class _ProvidersBodyState extends State<ProvidersBody> {
                 },
               ),
               const SizedBox(height: 8),
-              TextField(
-                decoration: const InputDecoration(labelText: 'ID'),
-                controller: TextEditingController(text: providerID),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Document Type'),
+                value: documentType,
+                items: const [
+                  DropdownMenuItem(value: 'ID Card', child: Text('ID Card')),
+                  DropdownMenuItem(value: 'Passport', child: Text('Passport')),
+                  DropdownMenuItem(
+                      value: 'Driver License', child: Text('Driver License')),
+                ],
                 onChanged: (value) {
-                  providerID = value;
+                  documentType = value!;
                 },
               ),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: 'Status'),
-                value: providerStatus,
-                items: const [
-                  DropdownMenuItem(value: 'Active', child: Text('Active')),
-                  DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
-                ],
+              TextField(
+                decoration: const InputDecoration(labelText: 'Document Number'),
+                controller: TextEditingController(text: documentNumber),
                 onChanged: (value) {
-                  providerStatus = value!;
+                  documentNumber = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Phone Number'),
+                controller: TextEditingController(text: phoneNumber),
+                onChanged: (value) {
+                  phoneNumber = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Email'),
+                controller: TextEditingController(text: email),
+                onChanged: (value) {
+                  email = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Address'),
+                controller: TextEditingController(text: address),
+                onChanged: (value) {
+                  address = value;
                 },
               ),
             ],
@@ -324,8 +398,11 @@ class _ProvidersBodyState extends State<ProvidersBody> {
               onPressed: () {
                 setState(() {
                   _providers[index]['provider'] = providerName;
-                  _providers[index]['ID'] = providerID;
-                  _providers[index]['status'] = providerStatus;
+                  _providers[index]['documentType'] = documentType;
+                  _providers[index]['documentNumber'] = documentNumber;
+                  _providers[index]['phoneNumber'] = phoneNumber;
+                  _providers[index]['email'] = email;
+                  _providers[index]['address'] = address;
                 });
                 Navigator.of(context).pop();
               },
@@ -452,15 +529,12 @@ class _ProvidersDataSource extends DataTableSource {
       index: index,
       cells: [
         DataCell(Text(provider['number'].toString())),
-        DataCell(Text(provider['provider'] ?? 'N/A')), // Handle potential null
-        DataCell(
-            Text(provider['documentType'] ?? 'N/A')), // Handle potential null
-        DataCell(
-            Text(provider['documentNumber'] ?? 'N/A')), // Handle potential null
-        DataCell(
-            Text(provider['phoneNumber'] ?? 'N/A')), // Handle potential null
-        DataCell(Text(provider['email'] ?? 'N/A')), // Handle potential null
-        DataCell(Text(provider['address'] ?? 'N/A')), // Handle potential null
+        DataCell(Text(provider['provider'] ?? 'N/A')),
+        DataCell(Text(provider['documentType'] ?? 'N/A')),
+        DataCell(Text(provider['documentNumber'] ?? 'N/A')),
+        DataCell(Text(provider['phoneNumber'] ?? 'N/A')),
+        DataCell(Text(provider['email'] ?? 'N/A')),
+        DataCell(Text(provider['address'] ?? 'N/A')),
         DataCell(
           Text(
             provider['status'],
@@ -492,8 +566,10 @@ class _ProvidersDataSource extends DataTableSource {
 
   @override
   bool get isRowCountApproximate => false;
+
   @override
   int get rowCount => data.length;
+
   @override
   int get selectedRowCount => 0;
 }

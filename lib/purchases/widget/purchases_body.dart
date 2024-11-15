@@ -17,10 +17,10 @@ class _PurchasesBodyState extends State<PurchasesBody> {
     return {
       'number': index + 1,
       'purchase': 'Purchase name $index',
-      'purchaseDate': 'Purchase Date $index',
+      'purchaseDate': DateTime.now().subtract(Duration(days: index)).toString(),
       'purchaseNumber': 'Purchase Number $index',
-      'provider': 'Provider $index',
-      'buyer': 'Buyer $index',
+      'provider': 'Provider ${index % 3 + 1}',
+      'buyer': 'Daniel',
       'totalCost': 'Total Cost $index',
       'status': index % 2 == 0 ? 'Registered' : 'Nulled',
     };
@@ -38,6 +38,18 @@ class _PurchasesBodyState extends State<PurchasesBody> {
             .contains(_filter.toLowerCase()))
         .toList();
   }
+
+  final List<String> _providers = ['Provider 1', 'Provider 2', 'Provider 3'];
+
+  final Map<String, double> _products = {
+    'Product A': 10.0,
+    'Product B': 20.0,
+    'Product C': 30.0,
+    'Product D': 40.0,
+    'Product E': 50.0,
+  };
+
+  List<String> _selectedProducts = [];
 
   void _generateIndividualPdfReport(Map<String, dynamic> purchase) async {
     final pdf = pw.Document();
@@ -312,7 +324,11 @@ class _PurchasesBodyState extends State<PurchasesBody> {
 
   void _showAddPurchaseDialog() {
     String purchaseName = '';
-    String purchaseID = '';
+    String purchaseNumber = '';
+    String selectedProvider = _providers[0];
+    String identificationType = '';
+    double totalCost = 0.0;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -329,35 +345,130 @@ class _PurchasesBodyState extends State<PurchasesBody> {
               ),
               const SizedBox(height: 8),
               TextField(
-                decoration: const InputDecoration(labelText: 'ID'),
+                decoration: const InputDecoration(labelText: 'Purchase Number'),
                 onChanged: (value) {
-                  purchaseID = value;
+                  purchaseNumber = value;
                 },
               ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Provider'),
+                value: selectedProvider,
+                items: _providers.map((provider) {
+                  return DropdownMenuItem(
+                      value: provider, child: Text(provider));
+                }).toList(),
+                onChanged: (value) {
+                  selectedProvider = value!;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                decoration:
+                    const InputDecoration(labelText: 'Identification Type'),
+                onChanged: (value) {
+                  identificationType = value;
+                },
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: () {
+                  _showProductSelectionDialog((selectedTotalCost) {
+                    setState(() {
+                      totalCost = selectedTotalCost;
+                    });
+                  });
+                },
+                child: const Text('Add Products'),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                children: _selectedProducts.map((product) {
+                  return Chip(
+                    label: Text(product),
+                    onDeleted: () {
+                      setState(() {
+                        _selectedProducts.remove(product);
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 8),
+              Text('Total Cost: \$${totalCost.toStringAsFixed(2)}'),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () {
-                if (purchaseName.isNotEmpty && purchaseID.isNotEmpty) {
+                if (purchaseName.isNotEmpty && purchaseNumber.isNotEmpty) {
                   setState(() {
                     _purchases.add({
                       'number': _purchases.length + 1,
                       'purchase': purchaseName,
-                      'ID': purchaseID,
+                      'purchaseDate': DateFormat('yyyy-MM-dd – kk:mm')
+                          .format(DateTime.now()),
+                      'purchaseNumber': purchaseNumber,
+                      'provider': selectedProvider,
+                      'buyer': 'Daniel',
                       'status': 'Registered',
+                      'totalCost': totalCost.toStringAsFixed(2),
                     });
                   });
                   Navigator.of(context).pop();
                 }
               },
-              child: const Text('Save'),
+              child: const Text('Register Purchase'),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
               child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showProductSelectionDialog(Function(double) onTotalCostChanged) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select Products'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: _products.keys.map((product) {
+                return CheckboxListTile(
+                  title: Text(product),
+                  value: _selectedProducts.contains(product),
+                  onChanged: (isSelected) {
+                    setState(() {
+                      if (isSelected!) {
+                        _selectedProducts.add(product);
+                      } else {
+                        _selectedProducts.remove(product);
+                      }
+                      double totalCost =
+                          _selectedProducts.fold(0.0, (sum, item) {
+                        return sum + _products[item]!;
+                      });
+                      onTotalCostChanged(totalCost);
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Done'),
             ),
           ],
         );
@@ -479,7 +590,7 @@ class _PurchasesDataSource extends DataTableSource {
         DataCell(Text(purchase['purchaseNumber'] ?? 'N/A')),
         DataCell(Text(purchase['provider'] ?? 'N/A')),
         DataCell(Text(purchase['buyer'] ?? 'N/A')),
-        DataCell(Text(purchase['totalCost'] ?? 'N/A')),
+        DataCell(Text('\$${purchase['totalCost'] ?? 'N/A'}')),
         DataCell(
           Text(
             purchase['status'],
@@ -517,8 +628,10 @@ class _PurchasesDataSource extends DataTableSource {
 
   @override
   bool get isRowCountApproximate => false;
+
   @override
   int get rowCount => data.length;
+
   @override
   int get selectedRowCount => 0;
 }
